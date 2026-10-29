@@ -1,0 +1,5 @@
+{
+  "name": "dwamaker-mods",
+  "owner": { "name": "dwamaker" },
+  "plugins": [{ "name": "update-watch", "source": "./" }]
+}

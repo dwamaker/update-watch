@@ -1,0 +1,5 @@
+{
+  "name": "update-watch",
+  "version": "0.1.0",
+  "description": "Checks installed plugins, hand-installed skills and REA for upstream updates and shows a toast. Never applies anything."
+}
