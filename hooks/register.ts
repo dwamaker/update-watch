@@ -103,20 +103,12 @@ async function check($: EngineInterface): Promise<Result> {
 
   // Skills from `npx skills`: the lock keeps each folder's tree id.
   await attempt('npx skills', async () => {
-    const lock = ((await optionalJson('.agents/.skill-lock.json'))?.skills ?? {}) as Record<string, { source: string; skillPath: string; skillFolderHash: string; updatedAt?: string }>
+    const lock = ((await optionalJson('.agents/.skill-lock.json'))?.skills ?? {}) as Record<string, { source: string; skillPath: string; skillFolderHash: string }>
     await Promise.all(Object.entries(lock).map(([name, s]) => attempt(name, async () => {
       const remote = (await tree(s.source)).get(s.skillPath.replace(/\/?SKILL\.md$/, ''))
       if (!remote) throw new Error(`upstream에 ${s.skillPath} 없음`)
-      if (remote === s.skillFolderHash) return
-      // mp-code-review is a renamed copy of code-review the CLI doesn't track.
-      found.push(name === 'code-review' ? 'code-review (mp-code-review에도 복사 필요)' : name)
+      if (remote !== s.skillFolderHash) found.push(name)
     })))
-    // The CLI updated code-review but the renamed copy wasn't refreshed after it.
-    const updated = lock['code-review']?.updatedAt
-    const copy = `${home}/.claude/skills/mp-code-review/SKILL.md`
-    if (updated && (await $.fs.exists(copy)) && (await $.fs.stat(copy)).mtimeMs < Date.parse(updated)) {
-      found.push('mp-code-review (~/.agents/skills/code-review에서 다시 복사, name만 mp-code-review로)')
-    }
   })
 
   // Hand-copied skills: every upstream file must match the local copy.
