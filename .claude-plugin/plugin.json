@@ -1,6 +1,6 @@
 {
   "name": "update-watch",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "MIT",
-  "description": "Checks installed plugins, hand-installed skills and REA for upstream updates and shows a toast. Never applies anything."
+  "description": "Checks installed plugins, hand-installed skills, REA and CLI tools for upstream updates and shows a toast. Never applies anything."
 }

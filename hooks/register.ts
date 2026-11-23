@@ -14,8 +14,16 @@ const MANUAL = [
   { repo: 'cloudflare/security-audit-skill', remote: 'skills/security-audit', local: '.claude/skills/security-audit', isGroup: false },
   { repo: 'NVIDIA/SkillSpector', remote: 'skills/skill-inspector', local: '.claude/skills/skill-inspector', isGroup: false },
 ]
+// CLI tools on PATH: `--version` against the repo's latest GitHub release.
+// One the machine lacks is skipped.
+const TOOLS = [
+  { name: 'rtk', repo: 'rtk-ai/rtk' },
+]
 
-const hex = (buf: ArrayBuffer) => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('')
+// The first x.y.z in a version line or a release tag.
+export const semver = (s: string) => /\d+\.\d+\.\d+/.exec(s)?.[0]
+
+const hex =(buf: ArrayBuffer) => [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('')
 
 // Git's blob id for these bytes, the id GitHub's tree listing carries.
 export async function blobId(bytes: Uint8Array) {
@@ -155,6 +163,14 @@ async function check($: EngineInterface): Promise<Result> {
     if (latest.version && latest.version !== current) found.push(`REA ${current} → ${latest.version} (Node ${latest.engines?.node ?? '?'})`)
   })
 
+  await Promise.all(TOOLS.map(t => attempt(t.name, async () => {
+    const run = await $.process.run([t.name, '--version'], { timeoutMs: 10000 }).catch(() => undefined)
+    const current = run?.exitCode === 0 ? semver(run.stdout) : undefined
+    if (!current) return
+    const latest = semver((await github(`repos/${t.repo}/releases/latest`)).tag_name ?? '')
+    if (latest && latest !== current) found.push(`${t.name} ${current} → ${latest}`)
+  })))
+
   return { at: await $.clock.now(), found: found.sort(), problems }
 }
 
@@ -169,7 +185,7 @@ export const register: Register = on => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'updates',
-      description: '플러그인·스킬·REA 업데이트를 지금 확인 (적용은 안 함)',
+      description: '플러그인·스킬·REA·CLI 업데이트를 지금 확인 (적용은 안 함)',
     })
     // A few seconds in, so the check never slows the session's start.
     $.clock.after(5000, () => {

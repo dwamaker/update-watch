@@ -8,6 +8,7 @@ What it checks, at session start (at most every 12 hours) and on `/updates`:
 - **Skills installed with `npx skills`**: the folder hash in `~/.agents/.skill-lock.json` against GitHub.
 - **Hand-copied skills** listed in `MANUAL` in `hooks/register.ts`, compared file by file. Only skills present on the machine are checked; edit the list for your own.
 - **REA**: the version pinned in the `rea` MCP registration against npm's latest.
+- **CLI tools** listed in `TOOLS` (rtk): `<tool> --version` against the repo's latest GitHub release. A tool not on PATH is skipped.
 
 A failed check (network, GitHub rate limit) is not cached, so it runs again next session. GitHub is called without a token, about 16 API calls per check.
 
